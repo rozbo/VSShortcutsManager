@@ -123,7 +123,7 @@ namespace VSShortcutsManager
                 else
                 {
                     // Loop over the group parts  (not the last part - that's the command name)
-                    for (int i = 0; i < commandNameParts.Length-1; i++)
+                    for (int i = 0; i < commandNameParts.Length - 1; i++)
                     {
                         // Find the group part in the current groupParent's list of groups
                         string groupName = commandNameParts[i];
@@ -205,12 +205,14 @@ namespace VSShortcutsManager
 
         private void ShowTreeViewEventHandler(object sender, EventArgs e)
         {
-            ((CommandShortcutsControl)Content).contentControl.Content = TreeControl;
+            ((CommandShortcutsControl)Content).Content = TreeControl;
         }
 
         private void ShowListViewEventHandler(object sender, EventArgs e)
         {
-            ((CommandShortcutsControl)Content).contentControl.Content = new CommandShortcutsList();
+            //this.Content;
+            ((CommandShortcutsControl)this.Content).Content = new CommandShortcutsList();
+            //((CommandShortcutsControl)Content).contentControl.Content = new CommandShortcutsList();
         }
 
         private OleMenuCommand CreateMenuItem(int cmdId, EventHandler menuItemCallback)
