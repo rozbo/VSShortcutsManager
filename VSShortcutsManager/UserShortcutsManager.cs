@@ -11,7 +11,7 @@ namespace VSShortcutsManager
     {
         private WritableSettingsStore UserSettingsStore;
 
-        private List<ShortcutFileInfo> UserShortcutsRegistry;
+        private List<ShortcutFileInfo> UserShortcutsRegistry = new List<ShortcutFileInfo>();
         private List<ShortcutFileInfo> VskImportsRegistry;
 
         // UserSettingsStore keys
