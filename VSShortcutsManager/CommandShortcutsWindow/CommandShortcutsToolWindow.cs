@@ -5,9 +5,14 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using VSShortcutsManager.CommandShortcutsWindow;
+using VSShortcutsManager.CommandShortcutsWindow.Converts;
 
 namespace VSShortcutsManager
 {
@@ -23,7 +28,7 @@ namespace VSShortcutsManager
     /// </para>
     /// </remarks>
     [Guid("124118e3-7c75-490e-8ace-742c96f001da")]
-    public class CommandShortcutsToolWindow : ToolWindowPane
+    public class CommandShortcutsToolWindow : ToolWindowPane, IVsSearchCallback
     {
         public const string guidVSShortcutsManagerCmdSet = "cca0811b-addf-4d7b-9dd6-fdb412c44d8a";
         public const int CommandShortcutsToolWinToolbar = 0x2004;
@@ -31,6 +36,11 @@ namespace VSShortcutsManager
         public static readonly Guid VSShortcutsManagerCmdSetGuid = new Guid("cca0811b-addf-4d7b-9dd6-fdb412c44d8a");
         public const int ShowTreeViewCmdId = 0x1815;
         public const int ShowListViewCmdId = 0x1825;
+
+        public override object Content => _contentControl;
+        private CommandShortcutsControl _contentControl;
+
+        // the only one data context. neither tree or list must use this context! 
 
         private CommandTreeView.CommandShortcutsTree treeControl;
         public CommandTreeView.CommandShortcutsTree TreeControl
@@ -59,7 +69,8 @@ namespace VSShortcutsManager
             // This is the user control hosted by the tool window; Note that, even if this class implements IDisposable,
             // we are not calling Dispose on this object. This is because ToolWindowPane calls Dispose on
             // the object returned by the Content property.
-            this.Content = new CommandShortcutsControl();
+            this._contentControl = new CommandShortcutsControl();
+            this.CmdDataContext = new CommandShortcutsControlDataContext(this);
         }
 
         protected override void Initialize()
@@ -71,124 +82,29 @@ namespace VSShortcutsManager
 
             this.ToolBar = new CommandID(new Guid(guidVSShortcutsManagerCmdSet), CommandShortcutsToolWinToolbar);
 
-            ((CommandShortcutsControl)this.Content).DataContext = new CommandShortcutsControlDataContext(this);
+            //_contentControl.MyDataContext = new CommandShortcutsControlDataContext(this);
 
             RegisterCommandHandlers();
 
             // Set the default initial opening layout and data
-            ((CommandShortcutsControl)this.Content).Content = TreeControl;  // Lazy-loading tree control property
+            _contentControl.Content = TreeControl;  // Lazy-loading tree control property
 
             // Get list of commands and shortcuts (from DTE?)
             // Convert to the correct objects for the CommandShortcutsTree
-            IEnumerable commands = GetCommandsFromDTE();
             // Push the data onto the TreeControl
-            TreeControl.Source = commands;
-        }
-
-        public IEnumerable<object> GetCommandsFromDTE()
-        {
-            IEnumerable<object> result = new ObservableCollection<object>();
-
-            // Fetch all the commands from DTE
-            foreach (EnvDTE.Command dteCommand in DTECommands)
+            //TreeControl.Source = commands;
+            //TreeControl.Source = _cmdDataContext.Commands;
+            // 对 TreeView的item source进行数据绑定
+            var bind = new Binding
             {
-                // Check for a valid command name
-                string commandName = dteCommand.Name;
-                if (string.IsNullOrWhiteSpace(commandName))
-                {
-                    continue;
-                }
-
-                // Create the CommandItem for this command
-                var commandItem = new CommandTreeView.CommandItem();
-                commandItem.CommandName = commandName;
-
-                // Parse the bindings (if there are any bound to the command)
-                // Note: Binding is a combination of scope and key-combo
-                if (dteCommand.Bindings != null && dteCommand.Bindings is object[] bindingsObj && bindingsObj.Length > 0)
-                {
-                    // Build a map of [Scope => (List of shortcuts)]
-                    commandItem.ShortcutGroup = GetShortcutMap(bindingsObj);
-                }
-
-                // Handle the Group name(s)
-                string[] commandNameParts = commandName.Split('.');
-                CommandTreeView.CommandGroup groupParent = null;
-                // Handle case where there is no group (no prefix before '.')
-                if (commandNameParts.Length < 2)
-                {
-                    // No group element to this name. Add it to "Ungrouped" group.
-                    groupParent = GetCommandGroup("Ungrouped", (Collection<object>)result);
-                }
-                else
-                {
-                    // Loop over the group parts  (not the last part - that's the command name)
-                    for (int i = 0; i < commandNameParts.Length - 1; i++)
-                    {
-                        // Find the group part in the current groupParent's list of groups
-                        string groupName = commandNameParts[i];
-
-                        // Top level group. Find it in the results object
-                        // Other groups: Find the item in the Items collection of the previous group
-                        Collection<object> subGroups = (i == 0) ? (Collection<object>)result : groupParent.Items;
-
-                        groupParent = GetCommandGroup(groupName, subGroups);
-                    }
-                }
-
-                // groupParent is now the parent group the command item should be added to
-                groupParent.Items.Add(commandItem);
-            }
-
-            return result;
+                Converter = new TreeViewDataListConverter(),
+                Source = CmdDataContext,
+                Path = new PropertyPath("Commands")
+            };
+            TreeControl.trvCommands.SetBinding(ItemsControl.ItemsSourceProperty, bind);
         }
 
-        private static CommandTreeView.CommandGroup GetCommandGroup(string groupName, Collection<object> groups)
-        {
-            CommandTreeView.CommandGroup groupParent;
-            var thisGroup = groups?.SingleOrDefault(item => item is CommandTreeView.CommandGroup groupItem && groupItem.GroupName.Equals(groupName));
-            // Create the CommandGroup if it doesn't exist
-            if (thisGroup == null)
-            {
-                thisGroup = new CommandTreeView.CommandGroup { GroupName = groupName };
-                groups.Add(thisGroup);
-            }
-            // store this item for the next round
-            groupParent = (CommandTreeView.CommandGroup)thisGroup;
-            return groupParent;
-        }
 
-        private Dictionary<string, List<string>> GetShortcutMap(object[] bindingsObj)
-        {
-            var shortcutGroup = new Dictionary<string, List<string>>();
-
-            // Process each binding string (Scope and keyCombo)
-            foreach (object bindingObj in bindingsObj)
-            {
-                string bindingString = (string)bindingObj;
-
-                // bindingString looks like: "Text Editor::Ctrl+R,Ctrl+M"  (Scope::Shortcut)
-                const string separator = "::";
-                if (bindingString.Contains("::"))
-                {
-                    string scopeName = bindingString.Substring(0, bindingString.IndexOf(separator));
-                    string keySequence = bindingString.Substring(bindingString.IndexOf(separator) + separator.Length);
-
-                    // Fetch the list of shortcuts for the given scope (may not exist)
-                    bool success = shortcutGroup.TryGetValue(scopeName, out List<string> shortcutKeys);
-                    if (!success)
-                    {
-                        shortcutKeys = new List<string>();
-                    }
-                    shortcutKeys.Add(keySequence);
-
-                    // Update the map with the new shortcut keys (create or update)
-                    shortcutGroup[scopeName] = shortcutKeys;
-                }
-            }
-
-            return shortcutGroup;
-        }
 
         private void RegisterCommandHandlers()
         {
@@ -230,6 +146,25 @@ namespace VSShortcutsManager
 
         #region Search
 
+        public void ReportProgress(IVsSearchTask pTask, uint dwProgress, uint dwMaxProgress)
+        {
+            // do nothing....
+        }
+
+        public void ReportComplete(IVsSearchTask pTask, uint dwResultsFound)
+        {
+            // the result here, we need it update the tree view result
+            // 
+            //
+            var task = (CommandShortcutsSearchTask)pTask;
+            // 确保UI线程
+            this.TreeControl.Dispatcher.Invoke(() =>
+            {
+
+                // this.TreeControl.Source = task.SearchResult;
+            });
+        }
+
         public override IVsSearchTask CreateSearch(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback)
         {
             if (pSearchQuery == null || pSearchCallback == null)
@@ -237,14 +172,12 @@ namespace VSShortcutsManager
                 return null;
             }
 
-            return new CommandShortcutsSearchTask(dwCookie, pSearchQuery, pSearchCallback, this);
+            return new CommandShortcutsSearchTask(dwCookie, pSearchQuery, this, this);
         }
 
         public override void ClearSearch()
         {
-            var control = (CommandShortcutsControl)this.Content;
-            var controlDataContext = (CommandShortcutsControlDataContext)control.DataContext;
-            controlDataContext.ClearSearch();
+            CmdDataContext.ClearSearch();
         }
 
         private IVsEnumWindowSearchOptions m_optionsEnum;
@@ -266,6 +199,7 @@ namespace VSShortcutsManager
         }
 
         private WindowSearchBooleanOption m_matchCaseOption;
+
         public WindowSearchBooleanOption MatchCaseOption
         {
             get
@@ -280,6 +214,8 @@ namespace VSShortcutsManager
         }
 
         public override bool SearchEnabled => true;
+
+        public CommandShortcutsControlDataContext CmdDataContext { get; }
 
         #endregion // Search
     }

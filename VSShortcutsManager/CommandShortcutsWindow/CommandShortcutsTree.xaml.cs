@@ -23,11 +23,7 @@ namespace VSShortcutsManager.CommandTreeView
             trvCommands.ItemsSource = commandsData;
         }
 
-        public IEnumerable Source
-        {
-            get => trvCommands.ItemsSource;
-            set => trvCommands.ItemsSource = value;
-        }
+        public ObservableCollection<object> Source { get; set; }
 
         private static List<CommandGroup> GetDummyCommandShortcutData()
         {

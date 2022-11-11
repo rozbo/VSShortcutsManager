@@ -13,6 +13,7 @@ using EnvDTE;
 using System.Diagnostics;
 using Microsoft.VisualStudio.Shell.Settings;
 using System.Xml.Linq;
+using VSShortcutsManager.CommandShortcutsWindow;
 
 namespace VSShortcutsManager
 {
@@ -1131,16 +1132,12 @@ namespace VSShortcutsManager
         {
             // Get a handle on the CommandShortcuts Toolwindow
             ThreadHelper.ThrowIfNotOnUIThread();
-
             CommandShortcutsToolWindow window = (CommandShortcutsToolWindow)this.package.FindToolWindow(typeof(CommandShortcutsToolWindow), 0, true);
             if ((null == window) || (null == window.Frame))
             {
                 throw new NotSupportedException("Cannot find CommandShortcuts tool window");
             }
-
-            CommandShortcutsControl cmdShortcutsControl = (CommandShortcutsControl)window.Content;
-            CommandShortcutsControlDataContext cmdShortcutsDataContext = (CommandShortcutsControlDataContext)cmdShortcutsControl.DataContext;
-            return cmdShortcutsDataContext;
+            return window.CmdDataContext;
         }
 
         private void OpenAddKeyboardShortcutDialog(object sender, EventArgs e)

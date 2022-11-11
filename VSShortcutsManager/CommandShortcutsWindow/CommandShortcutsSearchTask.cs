@@ -2,21 +2,25 @@
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using VSShortcutsManager.CommandShortcutsWindow;
 
 namespace VSShortcutsManager
 {
     internal class CommandShortcutsSearchTask : VsSearchTask
     {
         private CommandShortcutsToolWindow parentWindow;
-        private CommandShortcutsControlDataContext searchControlDataContext;
+        private CommandShortcutsControlDataContext _searchControlDataContext;
 
+        private VsCommandShortcutsList _searchResult;
         public CommandShortcutsSearchTask(uint dwCookie, IVsSearchQuery pSearchQuery, IVsSearchCallback pSearchCallback, CommandShortcutsToolWindow parentWindow)
             : base(dwCookie, pSearchQuery, pSearchCallback)
         {
             this.parentWindow = parentWindow;
-            var control = (CommandShortcutsControl)parentWindow.Content;
-            this.searchControlDataContext = (CommandShortcutsControlDataContext)control.DataContext;
+            this._searchControlDataContext = parentWindow.CmdDataContext;
+
         }
+
+        public VsCommandShortcutsList SearchResult => _searchResult;
 
         protected override void OnStartSearch()
         {
@@ -27,7 +31,8 @@ namespace VSShortcutsManager
             {
                 string searchString = this.SearchQuery.SearchString;
                 bool matchCase = this.parentWindow.MatchCaseOption.Value;
-                resultCount = this.searchControlDataContext.SearchCommands(searchString, matchCase);
+                resultCount = this._searchControlDataContext.SearchCommands(searchString, matchCase);
+                _searchResult = this._searchControlDataContext.Commands;
             }
             catch (Exception e)
             {

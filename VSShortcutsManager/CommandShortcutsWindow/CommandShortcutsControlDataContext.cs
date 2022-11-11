@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using EnvDTE;
 
-namespace VSShortcutsManager
+namespace VSShortcutsManager.CommandShortcutsWindow
 {
     public class CommandShortcutsControlDataContext : NotifyPropertyChangedBase
     {
@@ -25,7 +25,7 @@ namespace VSShortcutsManager
         #endregion // ctor
 
         #region Public properties
-        public VSCommandShortcuts Commands
+        public VsCommandShortcutsList Commands
         {
             get { return commands; }
 
@@ -132,7 +132,7 @@ namespace VSShortcutsManager
                     .SelectMany(command => GenerateCommandsShortcuts(command));
 
                 // Update the local commands cache
-                this.allCommandsCache = new VSCommandShortcuts(allCommandShortcuts);
+                this.allCommandsCache = new VsCommandShortcutsList(allCommandShortcuts);
 
                 // Update the backing object on the Toolwindow control (with a clone of the cache)
                 this.Commands = this.allCommandsCache.Clone();
@@ -238,8 +238,8 @@ namespace VSShortcutsManager
 
         #region Fields
 
-        private VSCommandShortcuts allCommandsCache;    // This holds all 4000+ commands in the system. Updated in PopulateCommands()
-        private VSCommandShortcuts commands;    // This is the object that is displayed on the window (the list of commands)
+        private VsCommandShortcutsList allCommandsCache;    // This holds all 4000+ commands in the system. Updated in PopulateCommands()
+        private VsCommandShortcutsList commands;    // This is the object that is displayed on the window (the list of commands)
         private readonly IServiceProvider serviceProvider;
         private readonly VSShortcutQueryEngine queryEngine;
 
@@ -253,12 +253,12 @@ namespace VSShortcutsManager
             this.Commands = GetPopularCommands();
         }
 
-        private VSCommandShortcuts GetPopularCommands()
+        private VsCommandShortcutsList GetPopularCommands()
         {
             List<string> popularCmdNames = PopularCommands.CommandList;
             // Note: Since each command can have many shortcuts, there can be many shortcuts in allCommandsCache for each listed command
             IEnumerable<CommandShortcut> popularCmdShortcuts = allCommandsCache.Where(command => popularCmdNames.Contains(command.CommandText));
-            return new VSCommandShortcuts(popularCmdShortcuts);
+            return new VsCommandShortcutsList(popularCmdShortcuts);
         }
 
         internal void ApplyUserShortcutsFilter(List<VSShortcut> userShortcuts)
@@ -267,9 +267,9 @@ namespace VSShortcutsManager
             this.Commands = ConvertVSShortcutListToVSCommandShortcuts(userShortcuts, isUserShortcut: true);
         }
 
-        private VSCommandShortcuts ConvertVSShortcutListToVSCommandShortcuts(List<VSShortcut> userShortcuts, bool isUserShortcut = false)
+        private VsCommandShortcutsList ConvertVSShortcutListToVSCommandShortcuts(List<VSShortcut> userShortcuts, bool isUserShortcut = false)
         {
-            VSCommandShortcuts vsCmdShortcuts = new VSCommandShortcuts();
+            VsCommandShortcutsList vsCmdShortcutsList = new VsCommandShortcutsList();
 
             foreach (VSShortcut userShortcut in userShortcuts)
             {
@@ -281,9 +281,9 @@ namespace VSShortcutsManager
                     IsRemoved = userShortcut.Operation.Equals("Remove"),
                     IsUserShortcut = isUserShortcut
                 };
-                vsCmdShortcuts.Add(commandShortcut);
+                vsCmdShortcutsList.Add(commandShortcut);
             }
-            return vsCmdShortcuts;
+            return vsCmdShortcutsList;
         }
 
         #endregion // Fields
@@ -356,26 +356,9 @@ namespace VSShortcutsManager
 
     }
 
-    public class VSCommandShortcuts : List<CommandShortcut>
-    {
-        public VSCommandShortcuts()
-            : base()
-        { }
-
-        public VSCommandShortcuts(IEnumerable<CommandShortcut> collection)
-            : base(collection)
-        { }
-
-        public VSCommandShortcuts Clone()
-        {
-            // Shallow clone is enough
-            return new VSCommandShortcuts(this);
-        }
-    }
-
     public abstract class NotifyPropertyChangedBase : INotifyPropertyChanged
     {
-        protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

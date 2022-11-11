@@ -656,7 +656,7 @@ namespace VSShortcutsManager
             ScopeLists.Add(new Scope() { Name = "Microsoft SQL Server Data Tools, Schema Compare", ID = "{00E9D2E3-9044-47D1-978C-BE2825249219}" });
             ScopeLists.Add(new Scope() { Name = "Table Designer", ID = "{4194FEE5-6777-419F-A5FC-47A536DF1BDB}" });
             ScopeLists.Add(new Scope() { Name = "HTML Editor Design View", ID = "{CB3FCFEA-03DF-11D1-81D2-00A0C91BBEE3}" });
-            ScopeLists.Add(new Scope() { Name = "HTML Editor Source View", ID = "{CB3FCFEB-03DF-11D1-81D2-00A0C91BBEE3}" });
+            ScopeLists.Add(new Scope() { Name = "HTML Editor MyDataContext View", ID = "{CB3FCFEB-03DF-11D1-81D2-00A0C91BBEE3}" });
             ScopeLists.Add(new Scope() { Name = "VC Image Editor", ID = "{C0BA70ED-069E-412B-9C06-7442E28A11B9}" });
             ScopeLists.Add(new Scope() { Name = "Microsoft SQL Server Data Tools, T-SQL Editor", ID = "{CC5D8DF0-88F4-4BB2-9DBB-B48CEE65C30A}" });
             ScopeLists.Add(new Scope() { Name = "Query Results", ID = "{0058A1F7-65F3-4DB9-B3D0-CA7E64DD73CD}" });

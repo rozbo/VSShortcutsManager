@@ -676,7 +676,7 @@ namespace VSShortcutsManager
 
             IVsEnumGuids scopeEnum = UIShell.EnumKeyBindingScopes();
 
-            // Random GUID the shell also skips ("Source Code Text Editor" scope)
+            // Random GUID the shell also skips ("MyDataContext Code Text Editor" scope)
             Guid toSkip = new Guid("{72F42A10-B1C5-11d0-A8CD-00A0C921A4D2}");
 
             Guid[] scopes = new Guid[1];

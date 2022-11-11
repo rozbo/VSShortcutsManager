@@ -3,12 +3,13 @@ using Microsoft.VisualStudio.Text.PatternMatching;
 using System;
 using System.Globalization;
 using System.Linq;
+using VSShortcutsManager.CommandShortcutsWindow;
 
 namespace VSShortcutsManager
 {
     interface ICommandsFilter
     {
-        VSCommandShortcuts Filter(VSCommandShortcuts commands);
+        VsCommandShortcutsList Filter(VsCommandShortcutsList commands);
     }
 
     class ExactMatchCommandsFilter : ICommandsFilter
@@ -19,12 +20,12 @@ namespace VSShortcutsManager
             this.stringComparison = matchCase ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
         }
 
-        public VSCommandShortcuts Filter(VSCommandShortcuts commands)
+        public VsCommandShortcutsList Filter(VsCommandShortcutsList commands)
         {
             var result = commands
                 .Where(command => command.CommandText.IndexOf(this.searchCriteria, this.stringComparison) >= 0);
 
-            return new VSCommandShortcuts(result);
+            return new VsCommandShortcutsList(result);
         }
 
         private readonly string searchCriteria;
@@ -38,7 +39,7 @@ namespace VSShortcutsManager
             this.patternMatcher = patternMatcher;
         }
 
-        public VSCommandShortcuts Filter(VSCommandShortcuts commands)
+        public VsCommandShortcutsList Filter(VsCommandShortcutsList commands)
         {
             var result = commands
                 .Select(command => (command: command, match: patternMatcher.TryMatch(command.CommandText)))
@@ -46,7 +47,7 @@ namespace VSShortcutsManager
                 .OrderBy(tuple => tuple.match)
                 .Select(tuple => tuple.command);
 
-            return new VSCommandShortcuts(result);
+            return new VsCommandShortcutsList(result);
         }
 
         private readonly IPatternMatcher patternMatcher;
