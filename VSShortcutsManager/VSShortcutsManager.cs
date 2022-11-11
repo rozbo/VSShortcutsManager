@@ -14,6 +14,10 @@ using System.Diagnostics;
 using Microsoft.VisualStudio.Shell.Settings;
 using System.Xml.Linq;
 using VSShortcutsManager.CommandShortcutsWindow;
+using static System.Resources.ResXFileRef;
+using System.Text;
+using System.Windows.Media.Animation;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace VSShortcutsManager
 {
@@ -27,11 +31,13 @@ namespace VSShortcutsManager
         /// </summary>
         public static readonly Guid VSShortcutsManagerCmdSetGuid = new Guid("cca0811b-addf-4d7b-9dd6-fdb412c44d8a");
         public const int BackupShortcutsCmdId = 0x1200;
+        public const int ExportHotKeyLiteCmdId = 0x1201;
         public const int ResetShortcutsCmdId = 0x1400;
         public const int ImportMappingSchemeCmdId = 0x1500;
         public const int ShortcutSchemesMenu = 0x2002;
         public const int DynamicThemeStartCmdId = 0x2A00;
         public const int UserShortcutsMenu = 0x1080;
+        public const int ExportHotKeyMenu = 0x1081;
         public const int ImportUserShortcutsCmdId = 0x1130;
         public const int ManageUserShortcutsCmdId = 0x1140;
         public const int DynamicUserShortcutsStartCmdId = 0x3A00;
@@ -161,7 +167,11 @@ namespace VSShortcutsManager
         {
             if (ServiceProvider.GetService(typeof(IMenuCommandService)) is OleMenuCommandService commandService)
             {
+                commandService.AddCommand(CreateMenuItem(ExportHotKeyMenu, null));
+                // 备份当前配置
+                commandService.AddCommand(CreateMenuItem(ExportHotKeyLiteCmdId, this.ExportHotKeyWithoutCache));
                 commandService.AddCommand(CreateMenuItem(BackupShortcutsCmdId, this.BackupShortcuts));
+                // 重置当前配置
                 commandService.AddCommand(CreateMenuItem(ResetShortcutsCmdId, this.ResetShortcuts));
                 commandService.AddCommand(CreateMenuItem(ScanExtensionsCmdId, this.ScanUserShortcuts));
                 OleMenuCommand clearUserShortcutsCmd = CreateMenuItem(ClearUserShortcutsCmdId, this.ClearUserShortcuts);
@@ -256,6 +266,49 @@ namespace VSShortcutsManager
             cmdShortcutsDataContext.ApplyUserShortcutsFilter(userShortcuts);
         }
 
+        private void ExportHotKeyWithoutCache(object sender, EventArgs e)
+        {
+            IVsProfileDataManager vsProfileDataManager = GetProfileDataManager();
+
+
+
+            SaveFileDialog dialog = new()
+            {
+                Filter = "VS Settings File (.vssettings)|*.vssettings",
+                FileName = "VS Shortcuts"
+            };
+            var fileDlg = dialog.ShowDialog();
+
+            if (true != fileDlg)
+            {
+                return;
+            }
+
+            var saveFilePath = dialog.FileName;
+
+            // Check if file already exists
+            if (File.Exists(saveFilePath))
+            {
+                // Prompt to overwrite
+                if (MessageBox.Show($"The settings file already exists {saveFilePath}\n\nDo you want to replace this file?", MSG_CAPTION_SAVE_SHORTCUTS, MessageBoxButtons.YesNo) != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
+            // Do the export
+
+            IVsProfileSettingsTree keyboardOnlyExportSettings = GetShortcutsSettingsTreeForExport(vsProfileDataManager);
+            int result = vsProfileDataManager.ExportSettings(saveFilePath, keyboardOnlyExportSettings, out IVsSettingsErrorInformation errorInfo);
+            if (result != VSConstants.S_OK)
+            {
+                // Something went wrong. TODO: Handle error.
+                MessageBox.Show($"Oops.... Something went wrong trying to export settings to the following file:\n\n{saveFilePath}", MSG_CAPTION_SAVE_SHORTCUTS);
+                return;
+            }
+            // Report success
+            var text = $"Your keyboard shortcuts have been saved to the following file:\n\n{saveFilePath}";
+            MessageBox.Show(text, MSG_CAPTION_SAVE_SHORTCUTS, MessageBoxButtons.OK);
+        }
         private void BackupShortcuts(object sender, EventArgs e)
         {
             ExecuteSaveShortcuts();
@@ -397,15 +450,12 @@ namespace VSShortcutsManager
             MessageBox.Show($"Keyboard shortcuts Reset", MSG_CAPTION_RESET);
         }
 
-        //-------- Backup Shortcuts --------
 
+        /// <summary>
+        /// Backup Shortcuts 
+        /// </summary>
         public void ExecuteSaveShortcuts()
         {
-            // Confirm Save operation
-            //if (MessageBox.Show("Save current keyboard shortcuts?", MSG_CAPTION_BACKUP, MessageBoxButtons.OKCancel) != DialogResult.OK)
-            //{
-            //    return;
-            //}
 
             IVsProfileDataManager vsProfileDataManager = GetProfileDataManager();
 
