@@ -55,15 +55,15 @@ namespace VSShortcutsManager.CommandShortcutsWindow
             //this.Commands = this.allCommandsCache.Clone();
         }
 
-        public uint SearchCommands(string searchCriteria, bool matchCase = true)
+        public uint SearchCommands(string searchCriteria, bool matchCase = true, bool isSearchingHotKey = false)
         {
             if (string.IsNullOrWhiteSpace(searchCriteria))
             {
                 return 0;
             }
+            var commandsFilter = new CommandsFilterFactory().GetCommandsFilter(searchCriteria, matchCase, isSearchingHotKey);
 
-            var commandsFilter = new CommandsFilterFactory().GetCommandsFilter(searchCriteria, matchCase);
-
+            // 在此过滤结果集，由于数据绑定，它会自动更新界面的
             this.Commands = commandsFilter.Filter(this.allCommandsCache);
 
             return (uint)this.Commands.Count;
@@ -317,9 +317,9 @@ namespace VSShortcutsManager.CommandShortcutsWindow
         public CommandBinding Binding { get; set; }
 
         private string shortcutText;
-        public string ShortcutText
+        public string? ShortcutText
         {
-            get { return shortcutText; }
+            get => shortcutText;
 
             set
             {

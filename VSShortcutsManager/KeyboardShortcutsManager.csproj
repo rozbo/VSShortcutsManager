@@ -72,10 +72,14 @@
     </Compile>
     <Compile Include="AddNewShortcut\AutoFilterComboBox.cs" />
     <Compile Include="AddNewShortcut\KeyCapturingTextBox.cs" />
+    <Compile Include="CommandShortcutsWindow\CommandFilters\HotKeyCommandsFilter.cs" />
+    <Compile Include="CommandShortcutsWindow\CommandsFilterFactory.cs" />
     <Compile Include="CommandShortcutsWindow\CommandShortcutsList.xaml.cs">
       <DependentUpon>CommandShortcutsList.xaml</DependentUpon>
     </Compile>
     <Compile Include="CommandShortcutsWindow\Converts\TreeViewDataListConverter.cs" />
+    <Compile Include="CommandShortcutsWindow\CommandFilters\ExactMatchCommandsFilter.cs" />
+    <Compile Include="CommandShortcutsWindow\CommandFilters\FuzzyMatchCommandsFilter.cs" />
     <Compile Include="CommandShortcutsWindow\VsCommandShortcutsList.cs" />
     <Compile Include="CommandTable\Command.cs" />
     <Compile Include="CommandTable\CommandTable.cs" />
@@ -85,7 +89,7 @@
     <Compile Include="Core\Command.cs" />
     <Compile Include="Core\CommandBinding.cs" />
     <Compile Include="Core\CommandId.cs" />
-    <Compile Include="CommandShortcutsWindow\CommandsFilter.cs" />
+    <Compile Include="CommandShortcutsWindow\CommandFilters\CommandsFilter.cs" />
     <Compile Include="CommandShortcutsWindow\CommandShortcutsToolWindow.cs" />
     <Compile Include="CommandShortcutsWindow\CommandShortcutsControl.xaml.cs">
       <DependentUpon>CommandShortcutsControl.xaml</DependentUpon>

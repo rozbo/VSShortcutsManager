@@ -31,7 +31,7 @@ namespace VSShortcutsManager
             {
                 string searchString = this.SearchQuery.SearchString;
                 bool matchCase = this.parentWindow.MatchCaseOption.Value;
-                resultCount = this._searchControlDataContext.SearchCommands(searchString, matchCase);
+                resultCount = this._searchControlDataContext.SearchCommands(searchString, matchCase, this.parentWindow.IsSearchingHotKey.Value);
                 _searchResult = this._searchControlDataContext.Commands;
             }
             catch (Exception e)

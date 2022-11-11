@@ -133,20 +133,11 @@ namespace VSShortcutsManager
         private void ShowListViewEventHandler(object sender, EventArgs e)
         {
             // 启用list view
-
-            if (_cmdListView == null)
+            _cmdListView ??= new CommandShortcutsList
             {
-                _cmdListView = new CommandShortcutsList();
                 // 绑定其数据源
-                _cmdListView.DataContext = (object)CmdDataContext;
-                //var bind = new Binding
-                //{
-                //    //Converter = new TreeViewDataListConverter(),
-                //    Source = CmdDataContext,
-                //    Path = new PropertyPath("Commands")
-                //};
-                //_cmdListView.DataGrid.SetBinding(ItemsControl.ItemsSourceProperty, bind);
-            }
+                DataContext = CmdDataContext
+            };
             _contentControl.Content = _cmdListView;
         }
 
@@ -191,7 +182,7 @@ namespace VSShortcutsManager
                 return null;
             }
 
-            return new CommandShortcutsSearchTask(dwCookie, pSearchQuery, this, this);
+            return new CommandShortcutsSearchTask(dwCookie, pSearchQuery, pSearchCallback, this);
         }
 
         public override void ClearSearch()
@@ -199,21 +190,22 @@ namespace VSShortcutsManager
             CmdDataContext.ClearSearch();
         }
 
-        private IVsEnumWindowSearchOptions m_optionsEnum;
+        private IVsEnumWindowSearchOptions _mOptionsEnum;
         public override IVsEnumWindowSearchOptions SearchOptionsEnum
         {
             get
             {
-                if (m_optionsEnum == null)
+                if (_mOptionsEnum == null)
                 {
                     List<IVsWindowSearchOption> list = new List<IVsWindowSearchOption>();
 
                     list.Add(this.MatchCaseOption);
+                    list.Add(this.IsSearchingHotKey);
 
-                    m_optionsEnum = new WindowSearchOptionEnumerator(list) as IVsEnumWindowSearchOptions;
+                    _mOptionsEnum = new WindowSearchOptionEnumerator(list) as IVsEnumWindowSearchOptions;
                 }
 
-                return m_optionsEnum;
+                return _mOptionsEnum;
             }
         }
 
@@ -231,6 +223,22 @@ namespace VSShortcutsManager
                 return m_matchCaseOption;
             }
         }
+
+
+        private WindowSearchBooleanOption _isSearchingHotKey;
+
+        public WindowSearchBooleanOption IsSearchingHotKey
+        {
+            get
+            {
+                if (_isSearchingHotKey == null)
+                {
+                    _isSearchingHotKey = new WindowSearchBooleanOption("HotKey", "Is search hot key?", false);
+                }
+                return _isSearchingHotKey;
+            }
+        }
+
 
         public override bool SearchEnabled => true;
 
