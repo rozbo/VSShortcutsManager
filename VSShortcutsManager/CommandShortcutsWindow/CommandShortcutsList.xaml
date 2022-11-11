@@ -7,38 +7,44 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <DockPanel LastChildFill="True" Name="ListViewPanel" Visibility="Collapsed">
+        <DockPanel LastChildFill="True" Name="ListViewPanel">
+            <!--<DataGrid Name="DataGrid" AutoGenerateColumns="True" />-->
             <DataGrid
+            Name="DataGrid"
             AlternatingRowBackground="Gainsboro" AlternationCount="2"
             AutoGenerateColumns="False"
             IsReadOnly="True"
             ItemsSource="{Binding Commands}"
             KeyUp="DataGrid_KeyUp"
             >
-                <!--<DataGrid.RowStyle>
-                <Style TargetType="DataGridRow">
-                    <Setter Property="FontWeight" Value="Normal"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsRemoved}" Value="True">
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="TextBlock.TextDecorations" Value="Strikethrough"/>
-                            <Setter Property="FontStyle" Value="Italic" />
-                            <Setter Property="Background" Value="DarkGray" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </DataGrid.RowStyle>-->
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="FontWeight" Value="Normal"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsRemoved}" Value="True">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="TextBlock.TextDecorations" Value="Strikethrough"/>
+                                <Setter Property="FontStyle" Value="Italic" />
+                                <Setter Property="Background" Value="DarkGray" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.Resources>
                     <Style x:Key="tstyle" TargetType="TextBlock">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsRemoved}" Value="True">
                                 <Setter Property="TextBlock.TextDecorations" Value="Strikethrough" />
-                                <!--<Setter Property="FontWeight" Value="Bold"/>-->
+
+                                <Setter Property="FontWeight" Value="Bold"/>
+
                             </DataTrigger>
-                            <!--<DataTrigger Binding="{Binding IsUserShortcut}" Value="True">-->
-                            <!--<Setter Property="FontStyle" Value="Italic"/>-->
-                            <!--<Setter Property="Foreground" Value="MediumBlue"/>-->
-                            <!--</DataTrigger>-->
+
+                            <DataTrigger Binding="{Binding IsUserShortcut}" Value="True">
+                                <Setter Property="FontStyle" Value="Italic"/>
+                                <Setter Property="Foreground" Value="MediumBlue"/>
+                            </DataTrigger>
+
                         </Style.Triggers>
                     </Style>
                 </DataGrid.Resources>

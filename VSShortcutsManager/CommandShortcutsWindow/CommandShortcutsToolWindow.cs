@@ -43,6 +43,9 @@ namespace VSShortcutsManager
         // the only one data context. neither tree or list must use this context! 
 
         private CommandTreeView.CommandShortcutsTree treeControl;
+
+
+        private CommandShortcutsList? _cmdListView;
         public CommandTreeView.CommandShortcutsTree TreeControl
         {
             get
@@ -102,6 +105,9 @@ namespace VSShortcutsManager
                 Path = new PropertyPath("Commands")
             };
             TreeControl.trvCommands.SetBinding(ItemsControl.ItemsSourceProperty, bind);
+
+            // 初始化list view
+
         }
 
 
@@ -126,9 +132,22 @@ namespace VSShortcutsManager
 
         private void ShowListViewEventHandler(object sender, EventArgs e)
         {
-            //this.Content;
-            ((CommandShortcutsControl)this.Content).Content = new CommandShortcutsList();
-            //((CommandShortcutsControl)Content).contentControl.Content = new CommandShortcutsList();
+            // 启用list view
+
+            if (_cmdListView == null)
+            {
+                _cmdListView = new CommandShortcutsList();
+                // 绑定其数据源
+                _cmdListView.DataContext = (object)CmdDataContext;
+                //var bind = new Binding
+                //{
+                //    //Converter = new TreeViewDataListConverter(),
+                //    Source = CmdDataContext,
+                //    Path = new PropertyPath("Commands")
+                //};
+                //_cmdListView.DataGrid.SetBinding(ItemsControl.ItemsSourceProperty, bind);
+            }
+            _contentControl.Content = _cmdListView;
         }
 
         private OleMenuCommand CreateMenuItem(int cmdId, EventHandler menuItemCallback)

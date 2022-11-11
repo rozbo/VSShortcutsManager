@@ -1,5 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Input;
+using VSShortcutsManager.CommandShortcutsWindow;
 
 namespace VSShortcutsManager
 {
@@ -22,8 +24,8 @@ namespace VSShortcutsManager
             // Handle Delete key operation
             if (e.Key == Key.Delete && grid.SelectedItems?.Count > 0)
             {
-                //((CommandShortcutsControlDataContext)this.DataContext).DeleteShortcuts(grid.SelectedItems.Cast<CommandShortcut>());
-                //e.Handled = true;
+                ((CommandShortcutsControlDataContext)this.DataContext).DeleteShortcuts(grid.SelectedItems.Cast<CommandShortcut>());
+                e.Handled = true;
             }
         }
     }
